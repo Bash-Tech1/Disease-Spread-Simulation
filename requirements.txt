@@ -1,5 +1,4 @@
-mesa
-numpy
-matplotlib
-pandas
-tqdm
+mesa==1.2.1
+pandas==2.2.2
+matplotlib==3.8.4
+

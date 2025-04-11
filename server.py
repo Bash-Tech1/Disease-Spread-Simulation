@@ -1,70 +1,49 @@
+from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
-from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.UserParam import UserSettableParameter
+
 from model import DiseaseModel
 
-# Agent portrayal with vaccination distinction
+
 def agent_portrayal(agent):
     portrayal = {
         "Shape": "circle",
         "Filled": "true",
+        "r": 0.8,
         "Layer": 0,
-        "r": 0.5,
-        "text": "🩹" if agent.vaccinated else "",
-        "text_color": "white"
+        "Color": "gray"
     }
-    
-    # Color coding with vaccine distinction
-    if agent.state == "S":
-        portrayal["Color"] = "yellow" if agent.vaccinated else "green"
-    elif agent.state == "I":
+
+    if agent.state == "Healthy":
+        portrayal["Color"] = "green"
+        portrayal["Layer"] = 0
+    elif agent.state == "Infected":
         portrayal["Color"] = "red"
-    else:  # Recovered
+        portrayal["Layer"] = 1
+    elif agent.state == "Recovered":
         portrayal["Color"] = "blue"
-    
-    # Quarantine border
-    if agent.quarantined:
-        portrayal["stroke_color"] = "black"
-        portrayal["stroke_width"] = 2
-        
+        portrayal["Layer"] = 2
+
     return portrayal
 
-# Create grid visualization
+
 grid = CanvasGrid(agent_portrayal, 20, 20, 500, 500)
 
-# Chart for S/I/R tracking
-chart = ChartModule([{"Label": "Susceptible", "Color": "green"},
-                    {"Label": "Infected", "Color": "red"},
-                    {"Label": "Recovered", "Color": "blue"}])
-
-# Interactive parameters
 model_params = {
-    "N": UserSettableParameter(
-        "slider", "Number of Agents", 100, 10, 300, 10,
-        description="Initial population size"
-    ),
-    "infection_rate": UserSettableParameter(
-        "slider", "Infection Rate", 0.3, 0.1, 1.0, 0.05,
-        description="Probability of infection transmission"
-    ),
-    "recovery_time": UserSettableParameter(
-        "slider", "Recovery Time (days)", 7, 3, 14, 1,
-        description="Days until recovery"
-    ),
-    "quarantine_effectiveness": UserSettableParameter(
-        "slider", "Quarantine Effectiveness", 0.5, 0.0, 1.0, 0.1,
-        description="Probability infected enter quarantine"
-    ),
+    "N": UserSettableParameter("slider", "Population", 100, 10, 300, 10),
     "width": 20,
-    "height": 20
+    "height": 20,
+    "infection_chance": UserSettableParameter("slider", "Infection Chance", 0.2, 0.0, 1.0, 0.05),
+    "recovery_time": UserSettableParameter("slider", "Recovery Time", 10, 1, 50, 1),
+    "use_quarantine": UserSettableParameter("checkbox", "Enable Quarantine", True)
 }
 
-# Create server
-server = ModularServer(DiseaseModel,
-                       [grid, chart],
-                       "Disease Spread Simulation",
-                       model_params)
+server = ModularServer(
+    DiseaseModel,
+    [grid],
+    "Disease Spread Simulation",
+    model_params
+)
 
-# Optional: For direct execution
-if __name__ == "__main__":
-    server.launch()
+server.port = 8521
+server.launch()
